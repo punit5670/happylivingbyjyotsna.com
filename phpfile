@@ -1,0 +1,46 @@
+<?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+// Check if this is a POST request
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    header("HTTP/1.0 405 Method Not Allowed");
+    exit("This script only accepts POST requests");
+}
+
+$servername = "localhost";
+$username = "essl";
+$password = "Essl@123";
+$dbname = "happyliving";
+
+// DB connect
+$conn = new mysqli($servername, $username, $password, $dbname);
+
+// Check connection
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+// Input clean (with proper sanitization)
+$feedback = isset($_POST['hero-field']) ? trim($_POST['hero-field']) : '';
+
+if (!empty($feedback)) {
+    // Escape special characters to prevent SQL injection
+    $feedback = $conn->real_escape_string($feedback);
+    
+    $stmt = $conn->prepare("INSERT INTO feedback (message) VALUES (?)");
+    $stmt->bind_param("s", $feedback);
+
+    if ($stmt->execute()) {
+        echo "✅ Thanks for your feedback!";
+    } else {
+        echo "❌ Error while saving: " . $stmt->error;
+    }
+
+    $stmt->close();
+} else {
+    echo "❗ No feedback received!";
+}
+
+$conn->close();
+?>
